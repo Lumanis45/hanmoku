@@ -8,7 +8,7 @@
 
 char *translit(const wchar_t *in_word) {
     if (setlocale(LC_ALL, "uk_UA.UTF-8") == NULL) {
-        fprintf(stderr, "Ошибка: не удалось установить локаль uk_UA.UTF-8\n");
+        fprintf(stderr, "Помилка: не вдалося встановити локаль uk_UA.UTF-8\n");
         return "!NOT_#WORK";
     }
     size_t i = 0;
@@ -112,36 +112,46 @@ char *translit(const wchar_t *in_word) {
         } else if (c == L'.') {
             char *trans_point = ";";
             strcat(output_word, trans_point);
-        } else {
+        } else if (c == L'ь') {}
+        else if (c == L':') {
+            char *trans_point = ":";
+            strcat(output_word, trans_point);
+        }
+        else {
 			output_word[i++] = c;
 			output_word[i] = L'\0';
 		}
     }
+    strcat(output_word, " ");
     //printf("word: %s\n", output_word);
     return output_word;
 }
 
 void translate(FILE *input_file, FILE *output_file) {
 	if (setlocale(LC_ALL, "uk_UA.UTF-8") == NULL) {
-        fwprintf(stderr, L"Ошибка: не удалось установить локаль в translate.\n");
+        fwprintf(stderr, L"Помилка: не вдалося встановити локаль в translate.\n");
         return;
     }
 
     wchar_t buffer[1024];
 
-    // --- Первый проход: Обработка заголовков ---
-    // ИСПРАВЛЕНИЕ: Используем fwscanf для чтения широких символов
     while(fwscanf(input_file, L"%ls", buffer) != EOF) {
         if (wcscmp(buffer, L"взяти") == 0) {
             fprintf(output_file, "#include <");
-        } else if (wcscmp(buffer, L"друк") == 0) {
+        } else if (wcscmp(buffer, L"вхід:вихід") == 0) {
             fprintf(output_file, "stdio.h>\n");
-        } else if (wcscmp(buffer, L"числова:функція") == 0) {
+        } else if (wcscmp(buffer, L"стандартну:бібліотеку") == 0) {
+            fprintf(output_file, "stdlib.h>\n");
+        }
+         
+        else if (wcscmp(buffer, L"числова:функція") == 0) {
             fprintf(output_file, "\nint ");
         } else if (wcscmp(buffer, L"головна") == 0) {
             fprintf(output_file, "main()");
-        } else if (wcscmp(buffer, L"текстова") == 0) {
-            fprintf(output_file, "\nchar *");
+        } else if (wcscmp(buffer, L":") == 0) {
+            fprintf(output_file, "\"");
+        } else if (wcscmp(buffer, L"строкова:змінна") == 0) {
+            fprintf(output_file, "\n\tchar *");
         } else if (wcscmp(buffer, L"(") == 0) {
             fprintf(output_file, "{");
         } else if (wcscmp(buffer, L")") == 0) {
@@ -151,23 +161,33 @@ void translate(FILE *input_file, FILE *output_file) {
         } else if (wcscmp(buffer, L".") == 0) {
             fprintf(output_file, ";\n");
         } else if (wcscmp(buffer, L"вивести") == 0) {
-            fprintf(output_file, "\n\tprintf"); // Для вывода числа
-        } else if (wcscmp(buffer, L"{") == 0) {
-            fprintf(output_file, "("); // Игнорируем {
-        } else if (wcscmp(buffer, L"}") == 0) {
-            fprintf(output_file, ")"); // Игнорируем }
+            fprintf(output_file, "\n\tprintf");
         } else if (wcscmp(buffer, L"повернути") == 0) {
             fprintf(output_file, "\n\treturn ");
         } else if (wcscmp(buffer, L"числова:змінна") == 0) {
             fprintf(output_file, "\n\tint ");
         } else if (wcscmp(buffer, L":ч") == 0) {
-            fprintf(output_file, "\"%%d\",");
+            fprintf(output_file, "%%d");
         } else if (wcscmp(buffer, L":чн") == 0) {
-            fprintf(output_file, "\"%%d\\n\",");
+            fprintf(output_file, "%%d\\n");
+        } else if (wcscmp(buffer, L":с") == 0) {
+            fprintf(output_file, "%%s");
+        } else if (wcscmp(buffer, L":сн") == 0) {
+            fprintf(output_file, "%%s\\n");
+        } else if (wcscmp(buffer, L"1:") == 0) {
+            fprintf(output_file, "(");
+        } else if (wcscmp(buffer, L":2") == 0) {
+            fprintf(output_file, ")");
+        } else if (wcscmp(buffer, L"%") == 0) {
+            fprintf(output_file, "&");
+        } else if (wcscmp(buffer, L"ввести") == 0) {
+            fprintf(output_file, "\n\tscanf");
+        } else if (wcscmp(buffer, L",") == 0) {
+            fprintf(output_file, ",");
         }
 		else {
 			fprintf(output_file, "%s", translit(buffer));
-			//fprintf(output_file, " "); // Пробел после транслитерированного слова
+			//fprintf(output_file, " ");
 		}
     }
 }
@@ -202,6 +222,9 @@ int main (int argc, char *argv[]) {
     	strcpy(compile_command, "gcc output.c -o a.out");
     } else if (strcmp(argv[2], "tcc") == 0) {
     	strcpy(compile_command, "tcc output.c");
+    } else {
+    	printf("Помилка знаходження компілятору!");
+    	return 1;
     }
     system(compile_command);
 
@@ -211,6 +234,9 @@ int main (int argc, char *argv[]) {
     } else if (strcmp(argv[3], "windows") == 0) {
     	//system("del output.c");
     	system("output.exe");
+    } else {
+    	printf("Помилка запуску!");
+    	return 1;
     }
 	return 0;
 }

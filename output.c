@@ -1,12 +1,14 @@
 #include <stdio.h>
 
 int main(){
-	int pershechislo = 5;
+	int pershechislo ;
 
-	int drugechislo = 15;
+	printf("vvedit chislo: ");
 
-	printf("%d\n",(pershechislo+drugechislo));
+	scanf("%d",&pershechislo );
 
-	return 0;
+	printf("%d\n",pershechislo );
+
+	return 0 ;
 
 }
